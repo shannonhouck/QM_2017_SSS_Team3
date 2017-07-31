@@ -14,9 +14,11 @@ H 1 1.1 2 104
 """)
 
 # Build a ERI tensor
-basis = psi4.core.BasisSet.build(mol, target="cc-pvdz")
+basis = psi4.core.BasisSet.build(mol, target="cc-pvqz")
 mints = psi4.core.MintsHelper(basis)
 I = np.array(mints.ao_eri())
+
+print ("nbas = ", I.shape[0])
 
 # Symmetric random density
 nbf = I.shape[0]
@@ -25,28 +27,38 @@ D = (D + D.T) / 2
 
 # Reference
 start = time.time()
-for i in range(1000):
+for i in range(100):
     J_ref = np.einsum("pqrs,rs->pq", I, D)
     K_ref = np.einsum("prqs,rs->pq", I, D)
 end = time.time()
 print(end - start)
 
-# Your implementation
+# Your implementation 2
 start = time.time()
 II = np.swapaxes(I, 1, 2).copy()
-for i in range(1000):
+for i in range(100):
+    J2 = jk.getJ_np(I, D)
+    K2 = jk.getJK_np(II, D)
+end = time.time()
+print(end - start)
+
+# Your implementation
+start = time.time()
+for i in range(100):
     J = jk.getJK_np(I, D)
     K = jk.getJK_np(II, D)
 end = time.time()
 print(end - start)
 
+'''
 # Your implementation 2
 start = time.time()
-for i in range(1000):
+for i in range(100):
     J2 = jk.getJ_np(I, D)
-    K2 = jk.getK_np(II, D)
+    K2 = jk.getJK_np(II, D)
 end = time.time()
 print(end - start)
+'''
 
 # Make sure your implementation is correct
 print("J is correct: %s" % np.allclose(J, J_ref))
